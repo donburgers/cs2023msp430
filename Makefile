@@ -1,40 +1,19 @@
+COMMON_OBJECTS  = 
+CPU             = msp430g2553
+CFLAGS          = -mmcu=${CPU} -I../h -L/opt/ti/msp430_gcc/include
 
-# Makefile for MSP430 Project
+# Switch the compiler (for the internal make rules)
+CC              = msp430-elf-gcc
+AS              = msp430-elf-as
 
-# Variables
-CC = msp430-gcc
-OBJCOPY = msp430-objcopy
-SIZE = msp430-size
-MSPDEBUG = mspdebug
-MCU = msp430g2553
-CFLAGS = -mmcu=$(MCU) -Os
-LDFLAGS = -mmcu=$(MCU)
+all: main.elf 
 
-# Files
-SOURCES = main.c
-OBJS = $(SOURCES:.c=.o)
-ELF = main.elf
-HEX = main.hex
+# Additional rules for files
+main.elf: ${COMMON_OBJECTS} main.o ../lib/libTimer.a
+	${CC} ${CFLAGS} -o $@ $^
 
-# Rules
-all: $(ELF)
-
-$(ELF): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
-
-%.hex: %.elf
-	$(OBJCOPY) -O ihex $< $@
-
-flash: $(HEX)
-	$(MSPDEBUG) rf2500 "prog $(HEX)"
-
-size: $(ELF)
-	$(SIZE) $(ELF)
+main.o: main.c notes.h
+	${CC} ${CFLAGS} -c $<
 
 clean:
-	rm -f $(OBJS) $(ELF) $(HEX)
-
-.PHONY: all flash size clean
+	rm -f *.o *.elf
